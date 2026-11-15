@@ -2,66 +2,110 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>World Cup 2026 - No API Needed</title>
+<title>Live Score</title>
 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@600;800&display=swap" rel="stylesheet">
 <style>
 *{font-family:'Kanit';box-sizing:border-box}
 body{margin:0; min-height:100vh; background:#020510; color:white}
 #bg{position:fixed; inset:0; z-index:-1; background:radial-gradient(ellipse at 50% -10%, rgba(0,255,120,.18) 0%, transparent 60%), linear-gradient(180deg,#0a1430 0%,#021008 100%)}
-h1{text-align:center; font-size:34px; margin:20px 0 4px}
+h1{text-align:center; font-size:32px; margin:16px 0 4px}
 .sub{text-align:center; opacity:.7; font-size:12px}
-.grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(350px,1fr)); gap:16px; max-width:1100px; margin:16px auto; padding:0 16px 40px}
-.card{background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.05)); border:1px solid rgba(255,255,255,.15); border-radius:26px; padding:18px; backdrop-filter:blur(12px)}
-.score-row{display:flex; align-items:center; justify-content:space-between; margin-top:12px}
+#status{text-align:center; font-size:12px; margin:10px auto; background:rgba(255,255,255,.12); padding:6px 14px; border-radius:20px; width:fit-content}
+.grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:14px; max-width:1100px; margin:12px auto; padding:0 12px 40px}
+.card{background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.05)); border:1px solid rgba(255,255,255,.15); border-radius:22px; padding:14px 16px; backdrop-filter:blur(12px)}
+.top{display:flex; justify-content:space-between; font-size:11px; opacity:.6}
+.score-row{display:flex; align-items:center; justify-content:space-between; margin-top:8px}
 .team{flex:1; text-align:center; position:relative}
-.logo{width:74px; height:74px; border-radius:50%; background:white; margin:0 auto; overflow:hidden; display:flex; align-items:center; justify-content:center}
+.logo{width:60px; height:60px; border-radius:50%; background:white; margin:0 auto; overflow:hidden; display:flex; align-items:center; justify-content:center}
 .logo img{width:100%; height:100%; object-fit:cover}
-.team.winner .logo{box-shadow:0 0 0 4px #ffd700, 0 0 25px gold}
-.crown{position:absolute; top:-32px; left:50%; margin-left:-16px; font-size:30px; display:none; animation:spin 2s linear infinite, float 2s ease-in-out infinite; filter:drop-shadow(0 0 8px gold)}
+.team.winner .logo{box-shadow:0 0 0 3px #ffd700, 0 0 18px gold}
+.crown{position:absolute; top:-26px; left:50%; margin-left:-14px; font-size:26px; display:none; animation:spin 2s linear infinite}
 .team.winner .crown{display:block}
 @keyframes spin{from{transform:rotateY(0)} to{transform:rotateY(360deg)}}
-@keyframes float{0%,100%{top:-32px}50%{top:-38px}}
-.goals{font-size:48px; font-weight:800}
-.goals.winner{color:#ffd700; text-shadow:0 0 15px gold}
+.goals{font-size:36px; font-weight:800}
+.goals.winner{color:#ffd700}
 </style>
 </head>
 <body>
 <div id="bg"></div>
-<h1>🏆 FIFA WORLD CUP 2026</h1>
-<div class="sub">เวอร์ชั่น GitHub Pages 100% ไม่ต้องต่อ API - โลโก้ขึ้นครบ มงกุฎหมุน 👑</div>
+<h1 id="mainTitle">🏆 FIFA WORLD CUP</h1>
+<div class="sub" id="subTitle">กำลังโหลด...</div>
+<div id="status">กำลังดึงสกอร์...</div>
 <div class="grid" id="grid"></div>
 
 <script>
-const MATCHES = [
-  {home:'Argentina', hg:3, away:'France', ag:3, winner:'Argentina', venue:'Lusail Final - PEN 4-2', status:'FT'},
-  {home:'Croatia', hg:2, away:'Morocco', ag:1, winner:'Croatia', venue:'3rd Place', status:'FT'},
-  {home:'France', hg:2, away:'Morocco', ag:0, winner:'France', venue:'Semi-Final', status:'FT'},
-  {home:'Argentina', hg:3, away:'Croatia', ag:0, winner:'Argentina', venue:'Semi-Final', status:'FT'},
-  {home:'England', hg:1, away:'France', ag:2, winner:'France', venue:'Quarter-Final', status:'FT'},
-  {home:'Brazil', hg:1, away:'Croatia', ag:1, winner:'Croatia', venue:'Quarter-Final - PEN 4-2', status:'FT'},
-  {home:'Japan', hg:2, away:'Spain', ag:1, winner:'Japan', venue:'Group Stage', status:'FT'},
-  {home:'Germany', hg:1, away:'Japan', ag:2, winner:'Japan', venue:'Group Stage', status:'FT'},
-];
+const YEAR = new Date().getFullYear(); // อัปเดตปีอัตโนมัติ
+document.getElementById('mainTitle').innerText = `🏆 FOOTBALL LIVE SCORE ${YEAR}`;
+document.getElementById('subTitle').innerText = `สกอร์ล่าสุดปี ${YEAR} อัปเดตสด - ze777-cmd.github.io • ทีมชนะมีมงกุฎหมุน 👑`;
+document.title = `Live Score ${YEAR}`;
 
-const FLAGS = {Argentina:'ar',France:'fr',Brazil:'br',Croatia:'hr',Japan:'jp',Spain:'es',England:'gb-eng',Portugal:'pt',Germany:'de',Morocco:'ma',Netherlands:'nl',USA:'us',Senegal:'sn'}
+async function loadLive(){
+  const status = document.getElementById('status');
+  const today = new Date().toISOString().split('T')[0];
+  status.innerText = `⏳ กำลังดึงสกอร์วันที่ ${today}...`;
 
-function render(){
-  document.getElementById('grid').innerHTML = MATCHES.map(m=>{
-    const homeWin = m.winner===m.home, awayWin = m.winner===m.away;
-    const hFlag = `https://flagcdn.com/w80/${FLAGS[m.home]||'un'}.png`;
-    const aFlag = `https://flagcdn.com/w80/${FLAGS[m.away]||'un'}.png`;
+  try{
+    // ลองดึงจาก API ฟรี
+    const res = await fetch(`https://www.thesportsdb.com/api/v1/json/3/eventsday.php?d=${today}&s=Soccer`);
+    const data = await res.json();
+    
+    if(data.events && data.events.length>0){
+      const matches = data.events.slice(0,20).map(ev=>({
+        home: ev.strHomeTeam, away: ev.strAwayTeam,
+        hg: ev.intHomeScore ?? '-', ag: ev.intAwayScore ?? '-',
+        winner: parseInt(ev.intHomeScore) > parseInt(ev.intAwayScore) ? ev.strHomeTeam : parseInt(ev.intAwayScore) > parseInt(ev.intHomeScore) ? ev.strAwayTeam : null,
+        status: ev.strStatus || 'LIVE',
+        league: ev.strLeague,
+        badgeH: ev.strHomeTeamBadge, badgeA: ev.strAwayTeamBadge
+      }));
+      render(matches, `✅ สกอร์สดวันนี้ ${today} ปี ${YEAR} - ${matches.length} คู่`);
+      return;
+    }
+    // ถ้าวันนี้ไม่มีแข่ง ย้อนไปเมื่อวาน (แบบในรูปนาย)
+    const yesterday = new Date(Date.now()-86400000).toISOString().split('T')[0];
+    const res2 = await fetch(`https://www.thesportsdb.com/api/v1/json/3/eventsday.php?d=${yesterday}&s=Soccer`);
+    const data2 = await res2.json();
+    if(data2.events){
+      const matches = data2.events.slice(0,20).map(ev=>({
+        home: ev.strHomeTeam, away: ev.strAwayTeam,
+        hg: ev.intHomeScore, ag: ev.intAwayScore,
+        winner: parseInt(ev.intHomeScore) > parseInt(ev.intAwayScore) ? ev.strHomeTeam : ev.strAwayTeam,
+        status:'FT', league: ev.strLeague,
+        badgeH: ev.strHomeTeamBadge, badgeA: ev.strAwayTeamBadge
+      }));
+      render(matches, `✅ โชว์สกอร์ล่าสุดเมื่อวาน ${yesterday} ปี ${YEAR}`);
+      return;
+    }
+    throw new Error();
+  }catch(e){
+    // สำรอง
+    status.innerText = `⚠️ วันนี้ไม่มีแข่งในระบบ - โชว์ตัวอย่างสกอร์ปี ${YEAR}`;
+    render([
+      {home:'ทีมชาติไทย', away:'เวียดนาม', hg:2, ag:1, winner:'ทีมชาติไทย', league:`AFF Cup ${YEAR}`, status:'FT', badgeH:'https://flagcdn.com/w80/th.png', badgeA:'https://flagcdn.com/w80/vn.png'},
+      {home:'ญี่ปุ่น', away:'บราซิล', hg:3, ag:2, winner:'ญี่ปุ่น', league:`กระชับมิตร ${YEAR}`, status:'FT', badgeH:'https://flagcdn.com/w80/jp.png', badgeA:'https://flagcdn.com/w80/br.png'},
+    ], `📌 ตัวอย่างสกอร์ปี ${YEAR}`);
+  }
+}
+
+function render(matches, msg){
+  document.getElementById('status').innerText = msg;
+  document.getElementById('grid').innerHTML = matches.map(m=>{
+    const homeWin = m.winner===m.home;
+    const awayWin = m.winner===m.away;
     return `
     <div class="card">
-      <div style="display:flex;justify-content:space-between;font-size:11px;opacity:.6"><span>${m.venue}</span><span>${m.status}</span></div>
+      <div class="top"><span>${m.league} • ${YEAR}</span><span>${m.status}</span></div>
       <div class="score-row">
-        <div class="team ${homeWin?'winner':''}"><div class="crown">👑</div><div class="logo"><img src="${hFlag}"></div><div style="margin-top:6px;font-weight:700">${m.home}</div><div style="font-size:11px;opacity:.6">ยิง ${m.hg} ลูก</div></div>
-        <div style="text-align:center"><span class="goals ${homeWin?'winner':''}">${m.hg}</span><span style="opacity:.3"> : </span><span class="goals ${awayWin?'winner':''}">${m.ag}</span></div>
-        <div class="team ${awayWin?'winner':''}"><div class="crown">👑</div><div class="logo"><img src="${aFlag}"></div><div style="margin-top:6px;font-weight:700">${m.away}</div><div style="font-size:11px;opacity:.6">ยิง ${m.ag} ลูก</div></div>
+        <div class="team ${homeWin?'winner':''}"><div class="crown">👑</div><div class="logo"><img src="${m.badgeH || 'https://flagcdn.com/w80/un.png'}" onerror="this.src='https://flagcdn.com/w80/un.png'"></div><div style="margin-top:4px;font-weight:700;font-size:14px">${m.home}</div><div style="font-size:11px;opacity:.6">ยิง ${m.hg} ลูก</div></div>
+        <div><span class="goals ${homeWin?'winner':''}">${m.hg}</span><span style="opacity:.3"> : </span><span class="goals ${awayWin?'winner':''}">${m.ag}</span></div>
+        <div class="team ${awayWin?'winner':''}"><div class="crown">👑</div><div class="logo"><img src="${m.badgeA || 'https://flagcdn.com/w80/un.png'}" onerror="this.src='https://flagcdn.com/w80/un.png'"></div><div style="margin-top:4px;font-weight:700;font-size:14px">${m.away}</div><div style="font-size:11px;opacity:.6">ยิง ${m.ag} ลูก</div></div>
       </div>
     </div>`;
   }).join('');
 }
-render();
+
+loadLive();
+setInterval(loadLive, 60000); // รีเฟรชทุก 1 นาทีให้เป็นล่าสุดเสมอ
 </script>
 </body>
 </html>
