@@ -2,105 +2,66 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>World Cup Live - Stadium Edition</title>
+<title>World Cup 2026 - No API Needed</title>
 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@600;800&display=swap" rel="stylesheet">
 <style>
-*{font-family:'Kanit'; box-sizing:border-box}
-body{margin:0; min-height:100vh; background:#020510; color:white; overflow-x:hidden; position:relative;}
-/* พื้นหลังสนามบอล */
-#stadiumBg{position:fixed; inset:0; z-index:-1; background: 
-  radial-gradient(ellipse at 50% -10%, rgba(0,255,120,0.15) 0%, transparent 60%),
-  radial-gradient(ellipse at 20% 10%, rgba(255,255,255,0.25) 0%, transparent 20%),
-  radial-gradient(ellipse at 80% 10%, rgba(255,255,255,0.25) 0%, transparent 20%),
-  linear-gradient(180deg, #0a1430 0%, #050a1a 40%, #021008 100%);
-}
-#stadiumBg::before{content:''; position:absolute; bottom:0; left:0; right:0; height:55%; background: 
-  repeating-linear-gradient(90deg, rgba(0,255,100,0.07) 0px, rgba(0,255,100,0.07) 80px, rgba(0,255,100,0.04) 80px, rgba(0,255,100,0.04) 160px),
-  linear-gradient(180deg, transparent 0%, rgba(0,80,30,0.3) 100%); filter:blur(0.5px);}
-#stadiumBg::after{content:''; position:absolute; top:0; left:0; right:0; height:40%; background:linear-gradient(180deg, rgba(255,255,255,0.06) 0%, transparent 100%);}
-
-.spotlight{position:absolute; top:-10%; width:35%; height:120%; background:linear-gradient(180deg, rgba(255,255,255,0.12) 0%, transparent 70%); transform:rotate(15deg); filter:blur(12px); animation: lightMove 8s ease-in-out infinite;}
-.spotlight.s2{left:50%; transform:rotate(-15deg); animation-delay:2s}
-@keyframes lightMove{0%,100%{opacity:0.6; transform:rotate(15deg) translateX(0)}50%{opacity:1; transform:rotate(15deg) translateX(20px)}}
-
-h1{text-align:center; font-size:36px; margin:24px 0 4px; text-shadow:0 0 20px rgba(0,255,120,0.6), 0 4px 0 #000}
-.sub{text-align:center; opacity:0.7; font-size:13px; margin-bottom:24px}
-
-.grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(350px,1fr)); gap:20px; max-width:1200px; margin:0 auto; padding:0 16px 40px}
-.card{background:linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.04)); border:1px solid rgba(255,255,255,0.15); border-radius:28px; padding:22px; backdrop-filter:blur(16px); box-shadow:0 12px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2); position:relative; overflow:hidden;}
-.card::before{content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);}
-
-.score-row{display:flex; align-items:center; justify-content:space-between; margin-top:16px}
+*{font-family:'Kanit';box-sizing:border-box}
+body{margin:0; min-height:100vh; background:#020510; color:white}
+#bg{position:fixed; inset:0; z-index:-1; background:radial-gradient(ellipse at 50% -10%, rgba(0,255,120,.18) 0%, transparent 60%), linear-gradient(180deg,#0a1430 0%,#021008 100%)}
+h1{text-align:center; font-size:34px; margin:20px 0 4px}
+.sub{text-align:center; opacity:.7; font-size:12px}
+.grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(350px,1fr)); gap:16px; max-width:1100px; margin:16px auto; padding:0 16px 40px}
+.card{background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.05)); border:1px solid rgba(255,255,255,.15); border-radius:26px; padding:18px; backdrop-filter:blur(12px)}
+.score-row{display:flex; align-items:center; justify-content:space-between; margin-top:12px}
 .team{flex:1; text-align:center; position:relative}
-.logo{width:72px; height:72px; border-radius:50%; background:white; display:flex; align-items:center; justify-content:center; margin:0 auto; position:relative; z-index:1; box-shadow:0 8px 20px rgba(0,0,0,0.4)}
-.team.winner .logo{box-shadow:0 0 0 4px #ffd700, 0 0 30px rgba(255,215,0,0.8), 0 10px 30px rgba(0,0,0,0.4); animation:winnerPulse 1.5s infinite}
-@keyframes winnerPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
-
-/* มงกุฎหมุนรอบตัวเอง */
-.crown{position:absolute; top:-28px; left:50%; width:34px; height:34px; margin-left:-17px; font-size:28px; z-index:3; display:none; animation:crownSpin 2s linear infinite, crownFloat 2s ease-in-out infinite; transform-origin:center center; filter:drop-shadow(0 0 8px gold)}
+.logo{width:74px; height:74px; border-radius:50%; background:white; margin:0 auto; overflow:hidden; display:flex; align-items:center; justify-content:center}
+.logo img{width:100%; height:100%; object-fit:cover}
+.team.winner .logo{box-shadow:0 0 0 4px #ffd700, 0 0 25px gold}
+.crown{position:absolute; top:-32px; left:50%; margin-left:-16px; font-size:30px; display:none; animation:spin 2s linear infinite, float 2s ease-in-out infinite; filter:drop-shadow(0 0 8px gold)}
 .team.winner .crown{display:block}
-@keyframes crownSpin{from{transform:translateX(0) rotateY(0deg)} to{transform:translateX(0) rotateY(360deg)}}
-@keyframes crownFloat{0%,100%{top:-28px}50%{top:-34px}}
-
-.team-name{margin-top:10px; font-weight:700}
+@keyframes spin{from{transform:rotateY(0)} to{transform:rotateY(360deg)}}
+@keyframes float{0%,100%{top:-32px}50%{top:-38px}}
 .goals{font-size:48px; font-weight:800}
-.goals.winner{color:#ffd700; text-shadow:0 0 15px rgba(255,215,0,0.8)}
-.vs{opacity:0.3; margin:0 8px}
-.status{font-size:11px; padding:5px 10px; border-radius:20px; background:rgba(255,255,255,0.12)}
-.live{background:#ff1a1a; box-shadow:0 0 10px #ff1a1a; animation:blink 1s infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:0.6}}
+.goals.winner{color:#ffd700; text-shadow:0 0 15px gold}
 </style>
 </head>
 <body>
-<div id="stadiumBg"><div class="spotlight"></div><div class="spotlight s2"></div></div>
-
+<div id="bg"></div>
 <h1>🏆 FIFA WORLD CUP 2026</h1>
-<div class="sub">LIVE SCORE • ทีมชนะสวมมงกุฎหมุนได้ 👑 • พื้นหลังสนามบอลจริง</div>
-
+<div class="sub">เวอร์ชั่น GitHub Pages 100% ไม่ต้องต่อ API - โลโก้ขึ้นครบ มงกุฎหมุน 👑</div>
 <div class="grid" id="grid"></div>
 
 <script>
-async function load(){
-  const grid=document.getElementById('grid');
-  try{
-    const res=await fetch('https://worldcupjson.net/matches?by_date=DESC').then(r=>r.json());
-    render(res.slice(0,9));
-  }catch{
-    render([
-      {home_team:{name:'Argentina',goals:3}, away_team:{name:'France',goals:3}, winner:'Argentina', status:'FT', datetime:new Date(), venue:'Lusail'},
-      {home_team:{name:'Brazil',goals:1}, away_team:{name:'Croatia',goals:2}, winner:'Croatia', status:'FT', datetime:new Date(), venue:'Education City'},
-      {home_team:{name:'Japan',goals:2}, away_team:{name:'Spain',goals:1}, winner:'Japan', status:'FT', datetime:new Date(), venue:'Khalifa'},
-    ]);
-  }
-}
+const MATCHES = [
+  {home:'Argentina', hg:3, away:'France', ag:3, winner:'Argentina', venue:'Lusail Final - PEN 4-2', status:'FT'},
+  {home:'Croatia', hg:2, away:'Morocco', ag:1, winner:'Croatia', venue:'3rd Place', status:'FT'},
+  {home:'France', hg:2, away:'Morocco', ag:0, winner:'France', venue:'Semi-Final', status:'FT'},
+  {home:'Argentina', hg:3, away:'Croatia', ag:0, winner:'Argentina', venue:'Semi-Final', status:'FT'},
+  {home:'England', hg:1, away:'France', ag:2, winner:'France', venue:'Quarter-Final', status:'FT'},
+  {home:'Brazil', hg:1, away:'Croatia', ag:1, winner:'Croatia', venue:'Quarter-Final - PEN 4-2', status:'FT'},
+  {home:'Japan', hg:2, away:'Spain', ag:1, winner:'Japan', venue:'Group Stage', status:'FT'},
+  {home:'Germany', hg:1, away:'Japan', ag:2, winner:'Japan', venue:'Group Stage', status:'FT'},
+];
 
-function render(matches){
-  document.getElementById('grid').innerHTML=matches.map(m=>{
-    const hg=m.home_team.goals??0, ag=m.away_team.goals??0;
-    const homeWin = m.winner && m.home_team.name.toLowerCase()===m.winner.toLowerCase();
-    const awayWin = m.winner && m.away_team.name.toLowerCase()===m.winner.toLowerCase();
+const FLAGS = {Argentina:'ar',France:'fr',Brazil:'br',Croatia:'hr',Japan:'jp',Spain:'es',England:'gb-eng',Portugal:'pt',Germany:'de',Morocco:'ma',Netherlands:'nl',USA:'us',Senegal:'sn'}
+
+function render(){
+  document.getElementById('grid').innerHTML = MATCHES.map(m=>{
+    const homeWin = m.winner===m.home, awayWin = m.winner===m.away;
+    const hFlag = `https://flagcdn.com/w80/${FLAGS[m.home]||'un'}.png`;
+    const aFlag = `https://flagcdn.com/w80/${FLAGS[m.away]||'un'}.png`;
     return `
     <div class="card">
-      <div style="display:flex; justify-content:space-between; font-size:11px; opacity:0.6"><span>${m.venue||'World Cup'}</span><span class="status ${m.status==='in_progress'?'live':''}">${m.status}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;opacity:.6"><span>${m.venue}</span><span>${m.status}</span></div>
       <div class="score-row">
-        <div class="team ${homeWin?'winner':''}">
-          <div class="crown">👑</div>
-          <div class="logo">⚽</div>
-          <div class="team-name">${m.home_team.name}</div>
-          <div style="font-size:11px; opacity:0.6; margin-top:2px">ยิง ${hg} ลูก</div>
-        </div>
-        <div style="text-align:center"><div><span class="goals ${homeWin?'winner':''}">${hg}</span><span class="vs">:</span><span class="goals ${awayWin?'winner':''}">${ag}</span></div></div>
-        <div class="team ${awayWin?'winner':''}">
-          <div class="crown">👑</div>
-          <div class="logo">⚽</div>
-          <div class="team-name">${m.away_team.name}</div>
-          <div style="font-size:11px; opacity:0.6; margin-top:2px">ยิง ${ag} ลูก</div>
-        </div>
+        <div class="team ${homeWin?'winner':''}"><div class="crown">👑</div><div class="logo"><img src="${hFlag}"></div><div style="margin-top:6px;font-weight:700">${m.home}</div><div style="font-size:11px;opacity:.6">ยิง ${m.hg} ลูก</div></div>
+        <div style="text-align:center"><span class="goals ${homeWin?'winner':''}">${m.hg}</span><span style="opacity:.3"> : </span><span class="goals ${awayWin?'winner':''}">${m.ag}</span></div>
+        <div class="team ${awayWin?'winner':''}"><div class="crown">👑</div><div class="logo"><img src="${aFlag}"></div><div style="margin-top:6px;font-weight:700">${m.away}</div><div style="font-size:11px;opacity:.6">ยิง ${m.ag} ลูก</div></div>
       </div>
     </div>`;
   }).join('');
 }
-load();
+render();
 </script>
 </body>
 </html>
