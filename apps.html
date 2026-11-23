@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>คลังรวมแอปแปลก & เกมหายาก</title>
+    <!-- โหลด Tailwind CSS สำหรับตกแต่งหน้าเว็บให้สวยงามและรองรับทุกหน้าจอ -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- โหลดฟอนต์ภาษาไทย Prompt และ Inter เพื่อความสวยงามอ่านง่าย -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- โหลด Font Awesome สำหรับไอคอนแว่นขยาย แชท ดาวน์โหลด -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Prompt', 'Inter', sans-serif;
+            background-color: #0b0f19;
+            color: #f3f4f6;
+            overflow-x: hidden;
+        }
+
+        /* แอนิเมชันแถบข้อความวิ่งจากขวาไปซ้าย (Marquee) */
+        .marquee-container {
+            width: 100%;
+            overflow: hidden;
+            white-space: nowrap;
+            background: linear-gradient(90deg, #1e1b4b 0%, #311042 50%, #1e1b4b 100%);
+            border-bottom: 1px solid rgba(139, 92, 246, 0.3);
+        }
+
+        .marquee-text {
+            display: inline-block;
+            padding-left: 100%;
+            animation: marqueeAnim 18s linear infinite;
+        }
+
+        .marquee-container:hover .marquee-text {
+            animation-play-state: paused;
+        }
+
+        @keyframes marqueeAnim {
+            0% {
+                transform: translate(0, 0);
+            }
+            100% {
+                transform: translate(-100%, 0);
+            }
+        }
+
+        /* ตกแต่งการ์ดแอปให้ดูมีมิติแบบ Dark Gaming UI */
+        .app-card {
+            background: linear-gradient(145deg, #151c2c 0%, #0f1420 100%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .app-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(139, 92, 246, 0.6);
+            box-shadow: 0 10px 25px -5px rgba(139, 92, 246, 0.25);
+        }
+
+        /* ปุ่มดาวน์โหลดสไตล์เรืองแสง */
+        .btn-download {
+            background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
+            transition: all 0.2s ease;
+        }
+
+        .btn-download:hover {
+            background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%);
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.5);
+        }
+
+        .btn-download:active {
+            transform: scale(0.97);
+        }
+
+        /* ซ่อน Scrollbar ของบางส่วนให้ดูคลีน */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b0f19;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #374151;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- ปกหลัง (เปลี่ยนได้จากหน้าหัวหน้า) -->
+    <div id="bgImg" class="hidden fixed inset-0 -z-10 bg-cover bg-center"></div>
+    <div id="bgVeil" class="hidden fixed inset-0 -z-10 bg-[#0b0f19]/70"></div>
+
+    <!-- หน้าต่างบังคับเข้าสู่ระบบ (โทเค็นมาจากเว็บหลัก) -->
+    <div id="loginGate" class="hidden fixed inset-0 z-[60] items-center justify-center bg-black/85 p-4">
+        <div class="bg-[#151c2c] border border-purple-500/40 rounded-2xl p-6 max-w-sm w-full text-center">
+            <h3 class="text-lg font-bold text-white mb-2">ต้องเข้าสู่ระบบก่อน</h3>
+            <p class="text-sm text-gray-300 mb-4">กรุณาเข้าสู่ระบบที่เว็บหลัก แล้วกดเข้าหน้านี้จากเว็บหลักอีกครั้ง</p>
+            <button type="button" id="gotoMainBtn" class="btn-download px-5 py-2 rounded-xl text-white font-medium text-sm">ไปหน้าเข้าสู่ระบบ</button>
+        </div>
+    </div>
+
+
+    <!-- =====================================================================
+         1. ส่วนบนสุด (TOP BAR): แถบข้อความวิ่งจากขวาไปซ้าย
+         ===================================================================== -->
+    <div class="marquee-container py-2.5 shadow-md sticky top-0 z-30">
+        <div class="marquee-text text-sm sm:text-base font-medium text-purple-200 tracking-wide">
+            <i class="fa-solid fa-fire text-amber-400 mr-2"></i>
+            แอปแปลกๆ ที่คนเขาไม่ยอมให้แบบฟรีๆ กัน ที่นี่รวมเหล่าแอปนั้น แต่ถ้าแอปไหนไม่มีก็แจ้งมาได้
+            <i class="fa-solid fa-sparkles text-purple-400 ml-2"></i>
+        </div>
+    </div>
+
+    <!-- คอนเทนเนอร์หลักของหน้าเว็บ -->
+    <main id="appMain" class="hidden w-full max-w-4xl mx-auto px-3 sm:px-6 py-5 flex-grow">
+
+        <!-- =====================================================================
+             2. แถบค้นหา + ปุ่มวงกลมแจ้งแอป (อยู่บรรทัดเดียวกัน แนวนอน)
+             ===================================================================== -->
+        <div class="flex items-center justify-between gap-2.5 sm:gap-4 mb-6">
+            
+            <!-- ฝั่งซ้าย: ช่องค้นหาชื่อแอป/เกม แบบ Real-time -->
+            <div class="relative flex-1">
+                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                    <i class="fa-solid fa-magnifying-glass text-gray-400 text-sm"></i>
+                </div>
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    placeholder="พิมพ์ชื่อแอป หรือเกมที่ตามหา..." 
+                    class="w-full bg-[#151c2c] text-white placeholder-gray-400 text-sm sm:text-base rounded-full pl-10 pr-9 py-2.5 sm:py-3 border border-gray-700/80 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30 transition-all shadow-inner"
+                >
+                <!-- ปุ่มล้างคำค้นหา (แสดงเมื่อมีการพิมพ์) -->
+                <button 
+                    id="clearSearchBtn" 
+                    type="button"
+                    class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white"
+                    title="ล้างคำค้นหา"
+                >
+                    <i class="fa-solid fa-circle-xmark"></i>
+                </button>
+            </div>
+
+            <!-- ฝั่งขวา: ปุ่มวงกลมแชท + คำอธิบายเล็กๆ "แจ้งแอปที่ไม่มีในนี้" -->
+            <button 
+                id="openRequestModalBtn" 
+                type="button"
+                class="flex items-center gap-2 bg-[#1a2235] hover:bg-[#232d45] border border-purple-500/40 rounded-full p-1.5 pr-3 sm:pr-4 transition-all active:scale-95 shrink-0 group shadow-lg"
+                title="คลิกเพื่อแจ้งขอแอปที่ไม่มีในเว็บ"
+            >
+                <!-- วงกลมไอคอนแชท -->
+                <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform">
+                    <i class="fa-solid fa-comment-dots text-base sm:text-lg"></i>
+                </div>
+                <!-- คำอธิบายเล็กๆ กำกับข้างวงกลม -->
+                <div class="text-left leading-tight">
+                    <span class="block text-[11px] sm:text-xs font-semibold text-purple-300 group-hover:text-white transition-colors">
+                        แจ้งแอปที่ไม่มีในนี้
+                    </span>
+                    <span class="block text-[9px] sm:text-[10px] text-gray-400">
+                        กดส่งรูป/ชื่อแอป
+                    </span>
+                </div>
+            </button>
+
+        </div>
+
+        <!-- หัวข้อแสดงจำนวนรายการ -->
+        <div class="flex items-center justify-between mb-3 px-1">
+            <h2 class="text-sm sm:text-base font-semibold text-gray-300 flex items-center gap-2">
+                <i class="fa-solid fa-gamepad text-purple-400"></i>
+                <span>รายการแอปและเกมทั้งหมด</span>
+            </h2>
+            <span id="appCountBadge" class="text-xs bg-gray-800 text-gray-300 px-2.5 py-1 rounded-full border border-gray-700">
+                ทั้งหมด 0 รายการ
+            </span>
+        </div>
+
+        <!-- =====================================================================
+             3. พื้นที่แสดงรายการแอป (GRID LAYOUT 2 คอลัมน์เรียงต่อกันไม่จำกัด)
+             ===================================================================== -->
+        <!-- การ์ดจัดเรียง 2 คอลัมน์อัตโนมัติ และถูกสร้างจากฐานข้อมูล: หัวหน้าเพิ่ม/ลบการ์ดได้ที่ส่วนล่างของหน้า ไม่ต้องคัดลอกโค้ดเอง -->
+        <div id="appGrid" class="grid grid-cols-2 gap-3 sm:gap-5">
+            <!-- การ์ดแอปถูกสร้างอัตโนมัติจากฐานข้อมูล (หัวหน้าเพิ่ม/ลบได้ในส่วนล่างของหน้า) -->
+        </div>
+
+        <!-- ข้อความแจ้งเตือนเมื่อค้นหาแล้วไม่พบแอป -->
+        <div id="noResultsMessage" class="hidden text-center py-12 px-4 bg-[#151c2c]/60 rounded-2xl border border-gray-800 mt-4">
+            <i class="fa-solid fa-ghost text-4xl text-gray-500 mb-3"></i>
+            <p id="noResultsTitle" class="text-gray-300 font-medium text-base mb-1">ไม่พบแอปหรือเกมที่คุณค้นหา</p>
+            <p class="text-gray-400 text-xs sm:text-sm mb-4">ลองค้นหาด้วยคำอื่น หรือกดปุ่มแจ้งแอปด้านบนเพื่อให้เราหามาลงให้</p>
+            <button 
+                type="button"
+                onclick="document.getElementById('openRequestModalBtn').click()"
+                class="bg-purple-600 hover:bg-purple-500 text-white text-xs sm:text-sm px-4 py-2 rounded-full transition"
+            >
+                <i class="fa-solid fa-paper-plane mr-1"></i> แจ้งขอแอปนี้เลย
+            </button>
+        </div>
+
+
+        <!-- =====================================================================
+             หัวหน้า: เพิ่มแอป / เปลี่ยนปกหลัง / ดูคำขอ (แสดงเฉพาะแอดมิน)
+             ===================================================================== -->
+        <section id="adminBox" class="hidden mt-8 space-y-5">
+            <div class="bg-[#151c2c] border border-purple-500/30 rounded-2xl p-4">
+                <h2 class="font-bold text-white mb-3"><i class="fa-solid fa-circle-plus text-purple-400 mr-2"></i>เพิ่มแอป / เกม</h2>
+                <button type="button" id="addCoverBtn" class="w-20 h-20 rounded-xl border-2 border-dashed border-purple-500 text-purple-300 text-3xl bg-[#0b0f19] bg-cover bg-center mb-3" aria-label="เลือกรูปหน้าปก">+</button>
+                <input type="file" id="addCoverInput" accept="image/*" class="hidden">
+                <input id="addTitle" placeholder="ชื่อแอป / เกม" class="w-full bg-[#0b0f19] text-white placeholder-gray-500 text-sm rounded-xl p-3 border border-gray-700 focus:outline-none focus:border-purple-500 mb-2">
+                <input id="addLink" placeholder="ลิงก์ดาวน์โหลด (MediaFire ฯลฯ)" class="w-full bg-[#0b0f19] text-white placeholder-gray-500 text-sm rounded-xl p-3 border border-gray-700 focus:outline-none focus:border-purple-500 mb-3">
+                <button type="button" id="addAppBtn" class="btn-download px-4 py-2 rounded-xl text-white text-sm font-medium">เพิ่มการ์ด</button>
+                <span id="addStatus" class="text-xs text-gray-400 ml-2"></span>
+            </div>
+
+            <div class="bg-[#151c2c] border border-purple-500/30 rounded-2xl p-4">
+                <h2 class="font-bold text-white mb-3"><i class="fa-solid fa-image text-purple-400 mr-2"></i>ปกหลังของเว็บ</h2>
+                <div class="flex gap-2 flex-wrap items-center">
+                    <button type="button" id="bgPickBtn" class="btn-download px-4 py-2 rounded-xl text-white text-sm font-medium">เลือกรูปปกหลังใหม่</button>
+                    <button type="button" id="bgResetBtn" class="px-4 py-2 rounded-xl text-gray-300 text-sm border border-gray-600 hover:border-purple-400">ลบปกหลัง</button>
+                    <span id="bgStatus" class="text-xs text-gray-400"></span>
+                </div>
+                <input type="file" id="bgInput" accept="image/*" class="hidden">
+            </div>
+
+            <div class="bg-[#151c2c] border border-purple-500/30 rounded-2xl p-4">
+                <h2 class="font-bold text-white mb-3"><i class="fa-solid fa-inbox text-purple-400 mr-2"></i>คำขอแอปจากสมาชิก</h2>
+                <div id="requestList" class="text-sm text-gray-400">ยังไม่มีคำขอ</div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ส่วนท้ายเว็บเล็กๆ -->
+    <footer class="text-center py-5 text-xs text-gray-500 border-t border-gray-800/60 mt-8">
+        รวมแอปและเกมหายากแจกฟรี • อัปเดตลิงก์ตรงปลอดภัย 100%
+    </footer>
+
+
+    <!-- =====================================================================
+         4. หน้าต่างป๊อปอัป (MODAL) สำหรับแจ้งขอแอปส่งเข้า DISCORD WEBHOOK
+         ===================================================================== -->
+    <div id="requestModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+        <div class="bg-[#151c2c] border border-purple-500/40 w-full max-w-md rounded-2xl p-5 sm:p-6 shadow-2xl relative animate-fade-in">
+            
+            <!-- ปุ่มปิดหน้าต่าง (X) -->
+            <button 
+                id="closeRequestModalBtn" 
+                type="button" 
+                class="absolute top-4 right-4 text-gray-400 hover:text-white w-8 h-8 rounded-full bg-gray-800/80 flex items-center justify-center transition"
+            >
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <!-- หัวข้อ Modal -->
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-full bg-purple-600/20 border border-purple-500/50 flex items-center justify-center text-purple-400">
+                    <i class="fa-brands fa-discord text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-white">แจ้งแอปที่ไม่มีในนี้</h3>
+                    <p class="text-xs text-gray-400">พิมพ์ชื่อแอปหรือแนบรูปตัวอย่าง ระบบจะส่งตรงถึงแอดมินทันที</p>
+                </div>
+            </div>
+
+            <!-- ฟอร์มกรอกข้อมูล -->
+            <form id="discordRequestForm" class="space-y-4">
+                
+                <!-- ช่องพิมพ์ข้อความ (Textarea) -->
+                <div>
+                    <label for="appDescription" class="block text-xs font-medium text-gray-300 mb-1.5">
+                        ชื่อแอป / เกม หรือรายละเอียดเพิ่มเติม <span class="text-red-400">*</span>
+                    </label>
+                    <textarea 
+                        id="appDescription" 
+                        rows="3" 
+                        required
+                        placeholder="เช่น อยากได้แอปตัดต่อวิดีโอที่เห็นใน TikTok ชื่อแอปว่า..."
+                        class="w-full bg-[#0b0f19] text-white placeholder-gray-500 text-sm rounded-xl p-3 border border-gray-700 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition"
+                    ></textarea>
+                </div>
+
+                <!-- กล่องสี่เหลี่ยมเล็กๆ มีเครื่องหมายบวก (+) สำหรับอัปโหลดรูปภาพคร่าวๆ -->
+                <div>
+                    <label class="block text-xs font-medium text-gray-300 mb-1.5">
+                        แนบรูปภาพตัวอย่างแอป (ไม่บังคับ)
+                    </label>
+                    
+                    <div class="flex items-center gap-3">
+                        <!-- Input ซ่อนไว้สำหรับเลือกไฟล์รูปภาพ -->
+                        <input 
+                            type="file" 
+                            id="appImageInput" 
+                            accept="image/*" 
+                            class="hidden"
+                        >
+                        
+                        <!-- กล่องสี่เหลี่ยมเครื่องหมาย + -->
+                        <label 
+                            for="appImageInput" 
+                            id="uploadBoxLabel"
+                            class="w-20 h-20 rounded-xl border-2 border-dashed border-gray-600 hover:border-purple-400 bg-[#0b0f19] hover:bg-purple-950/20 flex flex-col items-center justify-center cursor-pointer transition group shrink-0"
+                            title="คลิกเพื่อเลือกรูปภาพ"
+                        >
+                            <i class="fa-solid fa-plus text-xl text-gray-400 group-hover:text-purple-400 transition"></i>
+                            <span class="text-[10px] text-gray-500 group-hover:text-purple-300 mt-1">เพิ่มรูป</span>
+                        </label>
+
+                        <!-- กล่องแสดงรูปพรีวิวคร่าวๆ เมื่อผู้ใช้เลือกรูปแล้ว -->
+                        <div id="imagePreviewContainer" class="hidden relative w-20 h-20 rounded-xl overflow-hidden border border-purple-500/60 bg-black shrink-0">
+                            <img id="imagePreview" src="" alt="ตัวอย่างรูปภาพ" class="w-full h-full object-cover">
+                            <!-- ปุ่มลบรูปที่เลือก -->
+                            <button 
+                                type="button" 
+                                id="removeImageBtn"
+                                class="absolute top-1 right-1 bg-red-600/90 hover:bg-red-500 text-white w-5 h-5 rounded-full text-[10px] flex items-center justify-center shadow"
+                                title="ลบรูปภาพนี้"
+                            >
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+
+                        <div class="text-xs text-gray-400 leading-relaxed">
+                            <span id="fileNameDisplay" class="block text-gray-300 font-medium truncate max-w-[180px]">ยังไม่ได้เลือกรูปภาพ</span>
+                            <span>รองรับไฟล์ .JPG, .PNG (ขนาดไม่เกิน 8MB)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ปุ่มกดส่งข้อมูล -->
+                <div class="pt-2">
+                    <button 
+                        type="submit" 
+                        id="submitRequestBtn"
+                        class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-sm shadow-lg flex items-center justify-center gap-2 transition active:scale-98"
+                    >
+                        <i class="fa-solid fa-paper-plane"></i>
+                        <span>ส่งข้อมูลแจ้งแอดมิน</span>
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+
+    <!-- =====================================================================
+         5. กล่องแจ้งเตือนแบบนุ่มนวล (CUSTOM TOAST NOTIFICATION) แทน alert()
+         ===================================================================== -->
+    <div id="toastNotification" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 hidden items-center gap-2.5 px-4 py-3 rounded-xl shadow-2xl border text-sm font-medium transition-all duration-300 max-w-[90vw]">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-lg"></i>
+        <span id="toastMessage">ข้อความแจ้งเตือน</span>
+    </div>
+
+
+    <!-- =====================================================================
+         6. JAVASCRIPT: ระบบค้นหา Real-time และระบบส่งข้อมูลเข้า Discord
+         ===================================================================== -->
+    <script>
+        // =========================================================================
+        // ตั้งค่า (ค่าเดียวกับหน้าแคลน = ระบบหลังบ้านเดียวกัน)
+        // =========================================================================
+        const CONFIG = {
+            SUPABASE_URL: 'https://ztkqtvdllpzjsvlqxzni.supabase.co',
+            SUPABASE_ANON_KEY: 'sb_publishable_BkDeJmZYwMys8OP4eMkpVQ_F6hrJ35t',
+            MAIN_SITE_URL: 'https://suphasan887-beep.github.io/index.html/'
+        };
+
+        // 🔴 [ตั้งค่า] วางลิงก์ DISCORD WEBHOOK URL ของหน้านี้ตรงเครื่องหมายคำพูด (เว้นว่างไว้ = ไม่ส่งเข้า Discord แต่ยังบันทึกคำขอลงฐานข้อมูล)
+        const DISCORD_WEBHOOK_URL = "";
+
+        const TOKEN_KEY = 'main_access_token';
+        const $ = id => document.getElementById(id);
+        const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+        const safeUrl = u => /^https?:\/\//i.test(u || "") ? u : "#";
+        let db = null, user = null, isAdmin = false, apps = [];
+        const baseClient = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+
+        // --- ฟังก์ชันแสดงกล่องข้อความแจ้งเตือน (แทนการใช้ alert) ---
+        function showToast(message, type = 'success') {
+            const toast = $('toastNotification'), toastIcon = $('toastIcon'), toastMessage = $('toastMessage');
+            toastMessage.textContent = message;
+            toast.className = 'fixed bottom-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2.5 px-4 py-3 rounded-xl shadow-2xl border text-sm font-medium transition-all duration-300 max-w-[90vw]';
+            if (type === 'success') {
+                toast.classList.add('bg-emerald-950/95', 'border-emerald-500/50', 'text-emerald-200');
+                toastIcon.className = 'fa-solid fa-circle-check text-emerald-400 text-lg';
+            } else if (type === 'error') {
+                toast.classList.add('bg-red-950/95', 'border-red-500/50', 'text-red-200');
+                toastIcon.className = 'fa-solid fa-circle-exclamation text-red-400 text-lg';
+            } else {
+                toast.classList.add('bg-amber-950/95', 'border-amber-500/50', 'text-amber-200');
+                toastIcon.className = 'fa-solid fa-triangle-exclamation text-amber-400 text-lg';
+            }
+            clearTimeout(window.toastTimeout);
+            window.toastTimeout = setTimeout(() => { toast.classList.add('hidden'); toast.classList.remove('flex'); }, 3500);
+        }
+
+        // =========================================================================
+        // ระบบล็อกอินผ่านโทเค็นจากเว็บหลัก (#at=<access_token>)
+        // =========================================================================
+        async function getToken() {
+            const t = new URLSearchParams(location.hash.replace(/^#/, '')).get('at');
+            if (t) {
+                try { sessionStorage.setItem(TOKEN_KEY, t); } catch (e) {}
+                history.replaceState(null, '', location.pathname + location.search);
+                return t;
+            }
+            try { const s = sessionStorage.getItem(TOKEN_KEY); if (s) return s; } catch (e) {}
+            const { data } = await baseClient.auth.getSession();
+            return data?.session?.access_token || null;
+        }
+        function needLogin() {
+            try { sessionStorage.removeItem(TOKEN_KEY); } catch (e) {}
+            $('loginGate').classList.remove('hidden'); $('loginGate').classList.add('flex');
+        }
+        $('gotoMainBtn').addEventListener('click', () => location.href = CONFIG.MAIN_SITE_URL);
+
+        function pngUrl(url, name) {
+            const fb = 'https://api.dicebear.com/7.x/bottts/png?seed=' + encodeURIComponent(name);
+            if (!url || !/^https:\/\//.test(url)) return fb;
+            if (/dicebear\.com\/[^/]+\/svg/.test(url)) return url.replace('/svg', '/png');
+            return /\.svg(\?|$)/i.test(url) ? fb : url;
+        }
+        async function shrink(file) {
+            const bm = await createImageBitmap(file), sc = Math.min(1, 1600 / Math.max(bm.width, bm.height));
+            const c = document.createElement('canvas'); c.width = Math.round(bm.width * sc); c.height = Math.round(bm.height * sc);
+            c.getContext('2d').drawImage(bm, 0, 0, c.width, c.height);
+            return new Promise(r => c.toBlob(r, 'image/jpeg', 0.85));
+        }
+        async function uploadImg(folder, file) {
+            const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+            const { error } = await db.storage.from('clan-images').upload(path, await shrink(file), { contentType: 'image/jpeg' });
+            if (error) throw error;
+            return db.storage.from('clan-images').getPublicUrl(path).data.publicUrl;
+        }
+
+        async function boot() {
+            const token = await getToken();
+            if (!token) return needLogin();
+            const { data: { user: u }, error } = await baseClient.auth.getUser(token);
+            if (error || !u) return needLogin();
+            db = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY, { global: { headers: { Authorization: 'Bearer ' + token } } });
+            const { data: p } = await db.from('profiles').select('username, avatar_url').eq('id', u.id).maybeSingle();
+            user = { id: u.id, username: p?.username || u.user_metadata?.username || u.email?.split('@')[0] || 'ผู้ใช้', avatar: p?.avatar_url || '' };
+            const { data: ad } = await db.from('admins').select('user_id').eq('user_id', u.id).maybeSingle();
+            isAdmin = !!ad;
+            $('appMain').classList.remove('hidden');
+            if (isAdmin) { $('adminBox').classList.remove('hidden'); loadRequests(); }
+            loadBg(); loadApps();
+        }
+
+        // =========================================================================
+        // ปกหลังที่เปลี่ยนได้ (เก็บในตาราง site_settings คีย์ apps_bg)
+        // =========================================================================
+        async function loadBg() {
+            const { data } = await db.from('site_settings').select('value').eq('key', 'apps_bg').maybeSingle();
+            const url = data?.value || '';
+            $('bgImg').style.backgroundImage = url ? `url('${url.replace(/'/g, "%27")}')` : '';
+            $('bgImg').classList.toggle('hidden', !url); $('bgVeil').classList.toggle('hidden', !url);
+        }
+        $('bgPickBtn').addEventListener('click', () => $('bgInput').click());
+        $('bgInput').addEventListener('change', async function () {
+            const f = this.files[0]; if (!f) return;
+            $('bgStatus').textContent = 'กำลังอัปโหลด...';
+            try {
+                const url = await uploadImg('bg', f);
+                const { error } = await db.from('site_settings').upsert({ key: 'apps_bg', value: url });
+                if (error) throw error;
+                $('bgStatus').textContent = 'เปลี่ยนปกหลังแล้ว ✓'; loadBg();
+            } catch (e) { $('bgStatus').textContent = 'ไม่สำเร็จ: ' + (e.message || e); }
+            this.value = '';
+        });
+        $('bgResetBtn').addEventListener('click', async () => {
+            await db.from('site_settings').upsert({ key: 'apps_bg', value: '' });
+            $('bgStatus').textContent = 'ลบปกหลังแล้ว'; loadBg();
+        });
+
+        // =========================================================================
+        // รายการแอป + ระบบค้นหาแบบ Real-time (ค้นจากชื่อ .app-title)
+        // =========================================================================
+        const searchInput = $('searchInput'), clearSearchBtn = $('clearSearchBtn'), appGrid = $('appGrid');
+        const noResultsMessage = $('noResultsMessage'), appCountBadge = $('appCountBadge');
+
+        async function loadApps() {
+            const { data } = await db.from('apps').select('*').order('created_at', { ascending: false });
+            apps = data || []; filterApps();
+        }
+        function filterApps() {
+            const query = searchInput.value.toLowerCase().trim();
+            clearSearchBtn.classList.toggle('hidden', query.length === 0);
+            const list = apps.filter(a => a.title.toLowerCase().includes(query));
+            appGrid.innerHTML = list.map(a => `
+            <div class="app-card rounded-2xl overflow-hidden flex flex-col justify-between p-2.5 sm:p-3.5 shadow-lg">
+                <div>
+                    <div class="relative w-full aspect-square rounded-xl overflow-hidden bg-gray-900 mb-2.5 border border-gray-800">
+                        <img src="${esc(a.image_url)}" alt="รูปหน้าปกแอป"
+                             onerror="this.src='https://placehold.co/400x400/1f2937/9ca3af?text=No+Image'"
+                             class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
+                    </div>
+                    <h3 class="app-title text-sm sm:text-base font-semibold text-white truncate mb-3 px-0.5" title="${esc(a.title)}">${esc(a.title)}</h3>
+                </div>
+                <a href="${esc(safeUrl(a.download_url))}" target="_blank" rel="noopener noreferrer"
+                   class="btn-download w-full py-2 sm:py-2.5 px-3 rounded-xl text-white font-medium text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow">
+                    <i class="fa-solid fa-download"></i><span>ดาวน์โหลด</span>
+                </a>
+                ${isAdmin ? `<button type="button" onclick="delApp(${a.id})" class="mt-2 w-full py-1.5 rounded-xl text-xs text-gray-300 border border-gray-600 hover:border-red-400">ลบการ์ด</button>` : ''}
+            </div>`).join('');
+            appCountBadge.textContent = query ? `พบ ${list.length} รายการ` : `ทั้งหมด ${apps.length} รายการ`;
+            $('noResultsTitle').textContent = apps.length === 0 && !query ? 'ยังไม่มีแอปในคลัง' : 'ไม่พบแอปหรือเกมที่คุณค้นหา';
+            noResultsMessage.classList.toggle('hidden', list.length > 0);
+        }
+        searchInput.addEventListener('input', filterApps);
+        clearSearchBtn.addEventListener('click', () => { searchInput.value = ''; filterApps(); searchInput.focus(); });
+
+        // --- หัวหน้า: เพิ่ม/ลบแอป ---
+        $('addCoverBtn').addEventListener('click', () => $('addCoverInput').click());
+        $('addCoverInput').addEventListener('change', function () {
+            const f = this.files[0]; if (!f) return;
+            $('addCoverBtn').style.backgroundImage = `url('${URL.createObjectURL(f)}')`; $('addCoverBtn').textContent = '';
+        });
+        $('addAppBtn').addEventListener('click', async () => {
+            const f = $('addCoverInput').files[0], t = $('addTitle').value.trim(), l = $('addLink').value.trim();
+            if (!f || !t || !/^https?:\/\//i.test(l)) return showToast('เลือกรูป (+) ใส่ชื่อ และลิงก์ที่ขึ้นต้นด้วย http', 'warning');
+            $('addStatus').textContent = 'กำลังอัปโหลด...';
+            try {
+                const url = await uploadImg('apps', f);
+                const { error } = await db.from('apps').insert({ title: t, image_url: url, download_url: l });
+                if (error) throw error;
+            } catch (e) { $('addStatus').textContent = ''; return showToast('ไม่สำเร็จ: ' + (e.message || e), 'error'); }
+            $('addTitle').value = ''; $('addLink').value = ''; $('addCoverInput').value = '';
+            $('addCoverBtn').style.backgroundImage = ''; $('addCoverBtn').textContent = '+';
+            $('addStatus').textContent = ''; showToast('เพิ่มแอปแล้ว'); loadApps();
+        });
+        async function delApp(id) { if (confirm('ลบการ์ดนี้?')) { await db.from('apps').delete().eq('id', id); loadApps(); } }
+
+        async function loadRequests() {
+            const { data } = await db.from('app_requests').select('*').order('created_at', { ascending: false }).limit(50);
+            if (!data?.length) return;
+            $('requestList').innerHTML = data.map(r => `<div class="border-b border-gray-800 py-2">
+                <div class="text-xs text-gray-500">${esc(r.username)} · ${new Date(r.created_at).toLocaleString('th-TH')}</div>
+                <div class="text-gray-200">${esc(r.description)}</div>
+                ${r.image_url ? `<a href="${esc(safeUrl(r.image_url))}" target="_blank" rel="noopener"><img src="${esc(r.image_url)}" alt="" class="mt-1 w-28 rounded-lg"></a>` : ''}</div>`).join('');
+        }
+
+        // =========================================================================
+        // ระบบเปิด/ปิด Modal และจัดการอัปโหลดรูปภาพพรีวิว
+        // =========================================================================
+        const requestModal = $('requestModal'), openRequestModalBtn = $('openRequestModalBtn'), closeRequestModalBtn = $('closeRequestModalBtn');
+        const appImageInput = $('appImageInput'), imagePreviewContainer = $('imagePreviewContainer'), imagePreview = $('imagePreview');
+        const removeImageBtn = $('removeImageBtn'), fileNameDisplay = $('fileNameDisplay');
+        const discordRequestForm = $('discordRequestForm'), submitRequestBtn = $('submitRequestBtn');
+
+        openRequestModalBtn.addEventListener('click', () => { requestModal.classList.remove('hidden'); requestModal.classList.add('flex'); });
+        function closeModal() { requestModal.classList.add('hidden'); requestModal.classList.remove('flex'); }
+        closeRequestModalBtn.addEventListener('click', closeModal);
+        requestModal.addEventListener('click', e => { if (e.target === requestModal) closeModal(); });
+
+        appImageInput.addEventListener('change', function () {
+            const file = this.files[0];
+            if (!file) return;
+            if (file.size > 8 * 1024 * 1024) { showToast('ไฟล์รูปภาพใหญ่เกิน 8MB กรุณาเลือกรูปที่ขนาดเล็กลง', 'error'); this.value = ''; return; }
+            const reader = new FileReader();
+            reader.onload = e => { imagePreview.src = e.target.result; imagePreviewContainer.classList.remove('hidden'); fileNameDisplay.textContent = file.name; };
+            reader.readAsDataURL(file);
+        });
+        removeImageBtn.addEventListener('click', () => {
+            appImageInput.value = ''; imagePreview.src = ''; imagePreviewContainer.classList.add('hidden');
+            fileNameDisplay.textContent = 'ยังไม่ได้เลือกรูปภาพ';
+        });
+
+        // =========================================================================
+        // ส่งคำขอ: บันทึกลงฐานข้อมูล + (ถ้าตั้ง webhook ไว้) ยิงข้อความ+รูปเข้า Discord
+        // =========================================================================
+        discordRequestForm.addEventListener('submit', async e => {
+            e.preventDefault();
+            const descriptionText = $('appDescription').value.trim(), imageFile = appImageInput.files[0];
+            if (!descriptionText) return showToast('กรุณาพิมพ์ชื่อแอปหรือรายละเอียดก่อนส่ง', 'warning');
+            if (!db) return showToast('ยังไม่ได้เข้าสู่ระบบ', 'warning');
+
+            const originalBtnHTML = submitRequestBtn.innerHTML;
+            submitRequestBtn.disabled = true;
+            submitRequestBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>กำลังส่ง...</span>';
+            try {
+                const imgUrl = imageFile ? await uploadImg('requests', imageFile) : null;
+                const { error: dbErr } = await db.from('app_requests').insert({ user_id: user.id, username: user.username, description: descriptionText, image_url: imgUrl });
+                if (dbErr) throw dbErr;
+
+                if (DISCORD_WEBHOOK_URL && DISCORD_WEBHOOK_URL.startsWith('http')) {
+                    const formData = new FormData();
+                    formData.append('payload_json', JSON.stringify({
+                        username: 'บอทรับแจ้งแอปหายาก', allowed_mentions: { parse: [] },
+                        content: `📢 **มีคนแจ้งขอแอป/เกมใหม่เข้ามา!**\n👤 **ผู้แจ้ง:** ${user.username}\n📝 **รายละเอียด:**\n> ${descriptionText.replace(/\n/g, '\n> ')}\n⏰ **เวลาที่แจ้ง:** ${new Date().toLocaleString('th-TH')}`
+                    }));
+                    if (imageFile) formData.append('file', imageFile, imageFile.name);
+                    const response = await fetch(DISCORD_WEBHOOK_URL, { method: 'POST', body: formData });
+                    if (!response.ok) console.error('Discord ตอบกลับสถานะ: ' + response.status);
+                }
+                showToast('ส่งข้อมูลเรียบร้อย! แอดมินได้รับเรื่องแล้ว', 'success');
+                discordRequestForm.reset(); removeImageBtn.click(); closeModal();
+            } catch (error) {
+                console.error('Request Error:', error);
+                showToast('เกิดข้อผิดพลาดในการส่งข้อมูล กรุณาลองใหม่อีกครั้ง', 'error');
+            } finally {
+                submitRequestBtn.disabled = false; submitRequestBtn.innerHTML = originalBtnHTML;
+            }
+        });
+
+        boot();
+    </script>
+</body>
+</html>
